@@ -158,8 +158,8 @@ func (s *BillingService) Subscribe(businessID, planID uuid.UUID) (string, error)
 				Quantity: stripe.Int64(1),
 			},
 		},
-		SuccessURL: stripe.String("https://app.gostack.com/billing/success?session_id={CHECKOUT_SESSION_ID}"),
-		CancelURL:  stripe.String("https://app.gostack.com/billing/cancel"),
+		SuccessURL: stripe.String(s.config.FrontendURL + "/billing/success?session_id={CHECKOUT_SESSION_ID}"),
+		CancelURL:  stripe.String(s.config.FrontendURL + "/billing/cancel"),
 	}
 
 	// Add Metadata to link back to our Business/Plan

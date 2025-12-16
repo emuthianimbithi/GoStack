@@ -30,6 +30,7 @@ type BillingConfig struct {
 	MpesaPassKey        string
 	MpesaShortCode      string
 	MpesaCallbackURL    string
+	FrontendURL         string
 }
 
 type ModuleConfig struct {
@@ -83,6 +84,7 @@ func Load() AppConfig {
 			MpesaPassKey:        getEnv("MPESA_PASSKEY", ""),
 			MpesaShortCode:      getEnv("MPESA_SHORTCODE", ""),
 			MpesaCallbackURL:    getEnv("MPESA_CALLBACK_URL", "https://api.gostack.com/api/v1/callbacks/mpesa"),
+			FrontendURL:         getEnv("FRONTEND_URL", "https://app.gostack.com"),
 		},
 		OTLP: OTLPConfig{
 			Endpoint:    getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
