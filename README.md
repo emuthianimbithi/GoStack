@@ -19,7 +19,7 @@ Designed for scalability, ease of use, and strict tenant isolation.
 This repo is a template. Use the included script to rename the module to your own path.
 
 ```bash
-git clone https://github.com/your-org/framework.git my-saas
+git clone https://github.com/emuthianimbithi/GoStack.git my-saas
 cd my-saas
 ./scripts/rename_module.sh github.com/my-org/my-saas
 go mod tidy
