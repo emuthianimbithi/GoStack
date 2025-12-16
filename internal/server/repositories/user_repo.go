@@ -3,8 +3,8 @@ package repositories
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/emuthianimbithi/GoStack/internal/models"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -14,6 +14,14 @@ type UserRepository struct {
 
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{DB: db}
+}
+
+func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	return r.DB.WithContext(ctx).Delete(&models.User{}, id).Error
+}
+
+func (r *UserRepository) CreateInvite(ctx context.Context, invite *models.UserInvite) error {
+	return r.DB.WithContext(ctx).Create(invite).Error
 }
 
 func (r *UserRepository) Create(ctx context.Context, user *models.User) error {

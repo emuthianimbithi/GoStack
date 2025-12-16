@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/emuthianimbithi/GoStack/internal/config"
+	"github.com/emuthianimbithi/GoStack/internal/models"
 
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/postgres"
@@ -31,8 +32,32 @@ func Connect(cfg config.DBConfig) *gorm.DB {
 
 	// OpenTelemetry Instrumentation
 	if err := db.Use(otelgorm.NewPlugin()); err != nil {
-		log.Printf("failed to register otelgorm plugin: %v", err)
+		log.Printf("failed to use otelgorm plugin: %v", err)
 	}
 
 	return db
+}
+
+func AutoMigrate(db *gorm.DB) error {
+	// Register all models here
+	return db.AutoMigrate(
+		&models.User{},
+		&models.Business{},
+		&models.AccessRole{},
+		&models.APIResource{},
+		&models.RolePermission{},
+		&models.MenuItem{},
+		&models.BusinessPermission{},
+		&models.BusinessSettings{},
+		&models.AuditLog{},
+		&models.Notification{},
+		&models.UserInvite{},
+		&models.LedgerEntry{},
+		&models.Plan{},
+		&models.PlanFeature{},
+		&models.Subscription{},
+		&models.WebhookEndpoint{},
+		&models.WebhookDelivery{},
+		&models.File{},
+	)
 }

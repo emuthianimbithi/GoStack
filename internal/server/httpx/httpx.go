@@ -47,6 +47,16 @@ func JSON(c *gin.Context, status int, data interface{}) {
 	})
 }
 
+// Ok is a convenience wrapper for HTTP 200 with data.
+func Ok(c *gin.Context, data interface{}) {
+	JSON(c, http.StatusOK, data)
+}
+
+// NoContent sends HTTP 204.
+func NoContent(c *gin.Context) {
+	c.Status(http.StatusNoContent)
+}
+
 // JSONError is the generic error response helper.
 func JSONError(c *gin.Context, status int, code ErrorCode, message string, details interface{}) {
 	c.AbortWithStatusJSON(status, APIResponse{

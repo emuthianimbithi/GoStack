@@ -8,6 +8,7 @@ type User struct {
 	Password  string `gorm:"not null"` // Hashed
 	FirstName string `gorm:"not null"`
 	LastName  string `gorm:"not null"`
+	AvatarURL string `json:"avatar_url"`
 	// Role      string `gorm:"default:'user'"` // Deprecated in favor of RoleID
 
 	RoleID     *uuid.UUID  `gorm:"type:uuid;index"`

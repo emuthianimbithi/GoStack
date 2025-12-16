@@ -3,24 +3,28 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 
-	"github.com/google/uuid"
+	// Added for time.Now()
 	"github.com/emuthianimbithi/GoStack/internal/constants"
 	"github.com/emuthianimbithi/GoStack/internal/models"
 	"github.com/emuthianimbithi/GoStack/internal/server/repositories"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type UserService struct {
-	repo        *repositories.UserRepository
-	authService *AuthService
+	userRepo     *repositories.UserRepository
+	authService  *AuthService
+	emailService *EmailService // Add dependency
 }
 
-func NewUserService(repo *repositories.UserRepository, authService *AuthService) *UserService {
+func NewUserService(userRepo *repositories.UserRepository, authService *AuthService, emailService *EmailService) *UserService {
 	return &UserService{
-		repo:        repo,
-		authService: authService,
+		userRepo:     userRepo,
+		authService:  authService,
+		emailService: emailService,
 	}
 }
 
@@ -32,8 +36,37 @@ type RegisterRequest struct {
 	LastName     string `json:"last_name" binding:"required"`
 }
 
+func (s *UserService) InviteUser(ctx context.Context, email string, businessID, roleID, invitedByID uuid.UUID) error {
+	// 1. Generate Token
+	token := uuid.New().String()
+
+	// 2. Create Invite Record
+	invite := models.UserInvite{
+		Email:       email,
+		BusinessID:  businessID,
+		RoleID:      roleID,
+		Token:       token,
+		ExpiresAt:   time.Now().Add(48 * time.Hour),
+		Status:      "pending",
+		InvitedByID: invitedByID,
+	}
+
+	if err := s.userRepo.CreateInvite(ctx, &invite); err != nil {
+		return err
+	}
+
+	// 3. Send Email
+	if s.emailService != nil {
+		link := "https://app.gostack.com/register?token=" + token
+		body := "You have been invited to join the platform. Click here: " + link
+		go s.emailService.Send(email, "", "You're Invited!", body, &businessID)
+	}
+
+	return nil
+}
+
 func (s *UserService) RegisterUser(ctx context.Context, req RegisterRequest) error {
-	return s.repo.DB.Transaction(func(tx *gorm.DB) error {
+	return s.userRepo.DB.Transaction(func(tx *gorm.DB) error {
 		// 1. Check if user exists
 		var count int64
 		if err := tx.Model(&models.User{}).Where("email = ?", req.Email).Count(&count).Error; err != nil {
@@ -88,7 +121,7 @@ func (s *UserService) RegisterUser(ctx context.Context, req RegisterRequest) err
 
 func (s *UserService) Login(ctx context.Context, email, password string) (string, string, error) {
 	// 1. Find User
-	user, err := s.repo.FindByEmail(ctx, email)
+	user, err := s.userRepo.FindByEmail(ctx, email)
 	if err != nil {
 		return "", "", errors.New("invalid credentials")
 	}
@@ -104,7 +137,7 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 
 func (s *UserService) ListUsers(ctx context.Context, businessID *uuid.UUID) ([]models.User, error) {
 	var users []models.User
-	query := s.repo.DB.WithContext(ctx).Preload("AccessRole")
+	query := s.userRepo.DB.WithContext(ctx).Preload("AccessRole")
 
 	if businessID != nil {
 		query = query.Where("business_id = ?", *businessID)
@@ -116,7 +149,7 @@ func (s *UserService) ListUsers(ctx context.Context, businessID *uuid.UUID) ([]m
 
 func (s *UserService) DeleteUser(ctx context.Context, id uuid.UUID, businessID *uuid.UUID) error {
 	// Ensure user belongs to the business (if scoped)
-	query := s.repo.DB.WithContext(ctx).Where("id = ?", id)
+	query := s.userRepo.DB.WithContext(ctx).Where("id = ?", id)
 	if businessID != nil {
 		query = query.Where("business_id = ?", *businessID)
 	}
