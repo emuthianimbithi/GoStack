@@ -136,30 +136,13 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 }
 
 func (s *UserService) ListUsers(ctx context.Context, businessID *uuid.UUID) ([]models.User, error) {
-	var users []models.User
-	query := s.userRepo.DB.WithContext(ctx).Preload("AccessRole")
-
-	if businessID != nil {
-		query = query.Where("business_id = ?", *businessID)
-	}
-
-	err := query.Find(&users).Error
-	return users, err
+	return s.userRepo.List(ctx, businessID)
 }
 
 func (s *UserService) DeleteUser(ctx context.Context, id uuid.UUID, businessID *uuid.UUID) error {
-	// Ensure user belongs to the business (if scoped)
-	query := s.userRepo.DB.WithContext(ctx).Where("id = ?", id)
-	if businessID != nil {
-		query = query.Where("business_id = ?", *businessID)
-	}
-
-	result := query.Delete(&models.User{})
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
+	err := s.userRepo.Delete(ctx, id, businessID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("user not found or access denied")
 	}
-	return nil
+	return err
 }

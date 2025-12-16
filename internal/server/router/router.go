@@ -24,7 +24,6 @@ func NewRouter(c *container.Container) *gin.Engine {
 	// Protected Routes
 	api := r.Group("/api/v1")
 	api.Use(middleware.AuthMiddleware(c.AuthService))
-	api.Use(middleware.AuthMiddleware(c.AuthService))
 
 	if c.Config.Modules.AuditEnabled && c.AuditService != nil {
 		api.Use(middleware.AuditMiddleware(c.AuditService))

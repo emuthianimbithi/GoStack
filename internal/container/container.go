@@ -85,9 +85,6 @@ func (c *Container) initRepositories() {
 func (c *Container) initServices() {
 	c.PermService = permissions.NewService(c.DB, c.RDB)
 	c.AuthService = services.NewAuthService(c.Config.Auth, c.UserRepository)
-	c.AuditService = services.NewAuditService(c.AuditRepository)
-	// AuditService init moved to conditional block below, but let's keep it clean
-	// Re-reading file: AuditService is conditionally init.
 
 	// Ensure EmailService is init BEFORE UserService
 	c.EmailService = services.NewEmailService(c.Config.Email, c.DB)
@@ -98,7 +95,6 @@ func (c *Container) initServices() {
 		c.AuditService = services.NewAuditService(c.AuditRepository)
 	}
 
-	c.EmailService = services.NewEmailService(c.Config.Email, c.DB)
 	c.NotificationService = services.NewNotificationService(c.DB)
 	c.BillingService = services.NewBillingService(c.DB, c.Config.Billing)
 	c.WebhookService = services.NewWebhookService(c.DB)

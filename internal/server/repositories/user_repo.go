@@ -16,8 +16,32 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{DB: db}
 }
 
-func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.DB.WithContext(ctx).Delete(&models.User{}, id).Error
+func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID, businessID *uuid.UUID) error {
+	query := r.DB.WithContext(ctx).Where("id = ?", id)
+	if businessID != nil {
+		query = query.Where("business_id = ?", *businessID)
+	}
+
+	result := query.Delete(&models.User{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *UserRepository) List(ctx context.Context, businessID *uuid.UUID) ([]models.User, error) {
+	var users []models.User
+	query := r.DB.WithContext(ctx).Preload("AccessRole")
+
+	if businessID != nil {
+		query = query.Where("business_id = ?", *businessID)
+	}
+
+	err := query.Find(&users).Error
+	return users, err
 }
 
 func (r *UserRepository) CreateInvite(ctx context.Context, invite *models.UserInvite) error {
