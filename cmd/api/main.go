@@ -11,24 +11,22 @@ import (
 
 	"github.com/emuthianimbithi/GoStack/internal/config"
 	"github.com/emuthianimbithi/GoStack/internal/container"
+	"github.com/emuthianimbithi/GoStack/internal/db"
 	"github.com/emuthianimbithi/GoStack/internal/server/router"
-	"github.com/emuthianimbithi/GoStack/internal/tracing"
 )
 
 func main() {
 	// 1. Load Config
 	cfg := config.Load()
 
-	// 2. Observability
-	shutdownTrace := tracing.Init(cfg.OTLP)
-	defer func() {
-		if err := shutdownTrace(context.Background()); err != nil {
-			log.Printf("failed to shutdown tracer: %v", err)
-		}
-	}()
-
 	// 3. DI Container (Handles DB & Redis connection internally)
 	c := container.New(cfg)
+
+	// 4. Database Migrations
+	// Using GORM AutoMigrate as requested
+	if err := db.AutoMigrate(c.DB); err != nil {
+		log.Fatalf("failed to auto migrate: %v", err)
+	}
 
 	// 5. Router
 	r := router.NewRouter(c)

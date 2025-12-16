@@ -9,7 +9,11 @@ Designed for scalability, ease of use, and strict tenant isolation.
 - **Authentication**: JWT-based auth with Access/Refresh tokens.
 - **Advanced RBAC**: Role-Based Access Control with database-backed roles and permissions.
 - **Dynamic Menus**: API-driven, permissible menu structure for frontend applications.
-- **Worker System**: Lightweight Redis-based background job processing with distributed locking.
+- **Workflows**: Lightweight Redis-based background job processing.
+- **Billing & Monetization**: Built-in Subscription management (Stripe/M-Pesa) and Ledger system.
+- **Communication Hub**: Email (SendGrid) and Notification system (DB/FCM) with templating.
+- **Enterprise Ready**: Outbound Webhooks for tenant events and Audit Logging for all actions.
+- **File Storage**: Abstracted file upload service (Local/S3/GCP) with ownership tracking.
 - **Observability**: OpenTelemetry (OTel) instrumentation for tracing and metrics.
 - **Dependency Injection**: Clean architecture using a robust Container pattern.
 
@@ -60,15 +64,24 @@ go run cmd/seed/main.go
 | `HTTP_ADDR` | Server listen address | `:8080` |
 | `DB_DSN` | Postgres connection string | (Localhost defaults) |
 | `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` |
+| `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | OTel Collector Endpoint | `localhost:4317` |
 | `AUTH_ACCESS_TOKEN_DURATION` | Access token TTL | `15m` |
 | `AUTH_REFRESH_TOKEN_DURATION` | Refresh token TTL | `168h` (7 days) |
+| `STRIPE_SECRET_KEY` | Stripe Secret Key | - |
+| `MPESA_CONSUMER_KEY` | Safaricom Daraja Key | - |
+| `SENDGRID_API_KEY` | SendGrid API Key | - |
+| `ENABLE_AUDIT` | Enable/Disable Audit Logs | `true` |
 
 ## API Documentation
 The API is structured under `/api/v1`.
 - **Auth**: `/auth/register`, `/auth/login`
-- **Users**: `/api/v1/users`
+- **Users**: `/api/v1/users`, `/api/v1/invites` (Invite Flow)
 - **Roles**: `/api/v1/roles`
 - **Menus**: `/api/v1/menus`
+- **Billing**: `/api/v1/billing/subscribe`, `/api/v1/billing/cancel`
+- **Webhooks**: `/api/v1/webhooks` (Outbound configuration)
+- **Files**: `/api/v1/files/upload`
+- **Notifications**: `/api/v1/notifications`
 
 See `ARCHITECTURE.md` for a deep dive into the code structure.

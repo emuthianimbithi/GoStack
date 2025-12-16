@@ -31,7 +31,7 @@ func TestRegisterUser_Success(t *testing.T) {
 	// UserService.NewUserService takes AuthService but RegisterUser doesn't use it.
 	// We can pass nil for now or a dummy.
 	authSvc := services.NewAuthService(config.AuthConfig{}, repo)
-	userSvc := services.NewUserService(repo, authSvc)
+	userSvc := services.NewUserService(repo, authSvc, nil)
 
 	req := services.RegisterRequest{
 		BusinessName: "Acme Corp",
@@ -68,7 +68,7 @@ func TestRegisterUser_Duplicate(t *testing.T) {
 	db := setupTestDB()
 	repo := repositories.NewUserRepository(db)
 	authSvc := services.NewAuthService(config.AuthConfig{}, repo)
-	userSvc := services.NewUserService(repo, authSvc)
+	userSvc := services.NewUserService(repo, authSvc, nil)
 
 	req := services.RegisterRequest{
 		BusinessName: "Acme Corp",

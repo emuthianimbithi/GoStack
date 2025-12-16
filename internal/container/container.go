@@ -21,19 +21,30 @@ type Container struct {
 	Config config.AppConfig
 
 	// Repositories (Internal usage mostly, but exposed if needed)
-	UserRepository *repositories.UserRepository
+	UserRepository  *repositories.UserRepository
+	AuditRepository *repositories.AuditRepository
 
 	// Services
-	AuthService *services.AuthService
-	UserService *services.UserService
-	PermService *permissions.Service
+	AuthService         *services.AuthService
+	UserService         *services.UserService
+	PermService         *permissions.Service
+	AuditService        *services.AuditService
+	EmailService        *services.EmailService
+	NotificationService *services.NotificationService
+	BillingService      *services.BillingService
+	WebhookService      *services.WebhookService
+	UploadService       *services.UploadService
 
 	// Handlers
-	AuthHandler     *handlers.AuthHandler
-	UserHandler     *handlers.UserHandler
-	BusinessHandler *handlers.BusinessHandler
-	MenuHandler     *handlers.MenuHandler
-	RoleHandler     *handlers.RoleHandler
+	AuthHandler         *handlers.AuthHandler
+	UserHandler         *handlers.UserHandler
+	BusinessHandler     *handlers.BusinessHandler
+	MenuHandler         *handlers.MenuHandler
+	RoleHandler         *handlers.RoleHandler
+	NotificationHandler *handlers.NotificationHandler
+	BillingHandler      *handlers.BillingHandler
+	WebhookHandler      *handlers.WebhookHandler
+	FileHandler         *handlers.FileHandler
 }
 
 // New creates and initializes a new Container
@@ -68,18 +79,41 @@ func (c *Container) initInfrastructure() {
 
 func (c *Container) initRepositories() {
 	c.UserRepository = repositories.NewUserRepository(c.DB)
+	c.AuditRepository = repositories.NewAuditRepository(c.DB)
 }
 
 func (c *Container) initServices() {
 	c.PermService = permissions.NewService(c.DB, c.RDB)
 	c.AuthService = services.NewAuthService(c.Config.Auth, c.UserRepository)
-	c.UserService = services.NewUserService(c.UserRepository, c.AuthService)
+	c.AuditService = services.NewAuditService(c.AuditRepository)
+	// AuditService init moved to conditional block below, but let's keep it clean
+	// Re-reading file: AuditService is conditionally init.
+
+	// Ensure EmailService is init BEFORE UserService
+	c.EmailService = services.NewEmailService(c.Config.Email, c.DB)
+
+	c.UserService = services.NewUserService(c.UserRepository, c.AuthService, c.EmailService)
+
+	if c.Config.Modules.AuditEnabled {
+		c.AuditService = services.NewAuditService(c.AuditRepository)
+	}
+
+	c.EmailService = services.NewEmailService(c.Config.Email, c.DB)
+	c.NotificationService = services.NewNotificationService(c.DB)
+	c.BillingService = services.NewBillingService(c.DB, c.Config.Billing)
+	c.WebhookService = services.NewWebhookService(c.DB)
+	c.UploadService = services.NewUploadService(c.DB)
 }
 
 func (c *Container) initHandlers() {
-	c.UserHandler = handlers.NewUserHandler(c.UserService)
 	c.AuthHandler = handlers.NewAuthHandler(c.UserService)
+	// c.UserHandler = handlers.NewUserHandler(c.UserService) // Already below? No, let's keep order clean
+	c.UserHandler = handlers.NewUserHandler(c.UserService)
 	c.BusinessHandler = handlers.NewBusinessHandler(c.DB)
 	c.MenuHandler = handlers.NewMenuHandler(c.DB)
 	c.RoleHandler = handlers.NewRoleHandler(c.PermService)
+	c.NotificationHandler = handlers.NewNotificationHandler(c.NotificationService)
+	c.BillingHandler = handlers.NewBillingHandler(c.BillingService)
+	c.WebhookHandler = handlers.NewWebhookHandler(c.WebhookService)
+	c.FileHandler = handlers.NewFileHandler(c.UploadService)
 }

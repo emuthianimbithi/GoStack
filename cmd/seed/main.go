@@ -63,7 +63,7 @@ func seedAdmin(db *gorm.DB, email, password string) {
 	// but using service ensures consistency.
 
 	dummyAuth := services.NewAuthService(config.AuthConfig{}, repo)
-	userSvc := services.NewUserService(repo, dummyAuth)
+	userSvc := services.NewUserService(repo, dummyAuth, nil)
 
 	err := userSvc.RegisterUser(context.Background(), services.RegisterRequest{
 		Email:     email,
