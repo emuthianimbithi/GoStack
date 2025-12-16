@@ -5,10 +5,11 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type LedgerEntry struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey;"`
 	CreatedAt time.Time `gorm:"index"`
 	UpdatedAt time.Time
 
@@ -24,6 +25,13 @@ type LedgerEntry struct {
 
 	Description string
 	Metadata    datatypes.JSON `gorm:"type:jsonb"`
+}
+
+func (l *LedgerEntry) BeforeCreate(tx *gorm.DB) error {
+	if l.ID == uuid.Nil {
+		l.ID = uuid.New()
+	}
+	return nil
 }
 
 func (LedgerEntry) TableName() string {
